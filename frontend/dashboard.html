@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solo Travel | Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --surface: rgba(26, 26, 26, 0.75);
+            --border: rgba(255, 255, 255, 0.1);
+            --border-hover: rgba(255, 255, 255, 0.2);
+            --text: #e8e8e8;
+            --muted: #a1a1aa;
+            --accent: #4ade80;
+            --accent-dim: rgba(74, 222, 128, 0.1);
+            --red: #f87171;
+            --red-dim: rgba(248, 113, 113, 0.1);
+        }
+
+        body {
+            font-family: 'Geist', sans-serif;
+            /* Added Atmospheric Background Image with Dark Overlay */
+            background: linear-gradient(to bottom, rgba(15, 15, 15, 0.85), rgba(15, 15, 15, 0.95)), url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Nav */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 1.5rem;
+            height: 52px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: rgba(15, 15, 15, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 50;
+        }
+
+        .logo { font-family: 'Geist Mono', monospace; font-size: 0.85rem; color: var(--text); display: flex; align-items: center; gap: 0.5rem; }
+        .logo-dot { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; animation: blink 2.5s ease-in-out infinite; }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+        .nav-right { display: flex; align-items: center; gap: 1rem; }
+        .username-pill { font-size: 0.78rem; color: var(--muted); font-family: 'Geist Mono', monospace; }
+
+        .btn-ghost {
+            padding: 0.35rem 0.85rem; background: transparent; border: 1px solid var(--border); color: var(--muted);
+            border-radius: 6px; font-family: 'Geist', sans-serif; font-size: 0.8rem; cursor: pointer; transition: all 0.15s;
+        }
+        .btn-ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+
+        /* Main */
+        .page { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
+        .section-label { font-family: 'Geist Mono', monospace; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.75rem; }
+
+        .card {
+            background: var(--surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 10px; padding: 1.25rem; transition: border-color 0.15s;
+        }
+        .card:hover { border-color: var(--border-hover); }
+
+        /* Top row */
+        .top-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+        .greeting-card { grid-column: span 2; }
+        .greeting-name { font-size: 1.4rem; font-weight: 600; margin-bottom: 0.25rem; }
+        .greeting-sub { font-size: 0.85rem; color: var(--muted); }
+        .stat-card { display: flex; flex-direction: column; justify-content: space-between; }
+        .stat-value { font-family: 'Geist Mono', monospace; font-size: 1.8rem; font-weight: 500; line-height: 1; }
+        .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem; }
+
+        /* Mid row */
+        .mid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .status-input {
+            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem;
+            color: var(--text); font-family: 'Geist', sans-serif; font-size: 0.88rem; resize: none; min-height: 80px; outline: none; transition: border-color 0.15s; line-height: 1.5;
+        }
+        .status-input::placeholder { color: #666; }
+        .status-input:focus { border-color: #555; }
+
+        .btn-primary {
+            margin-top: 0.75rem; width: 100%; padding: 0.6rem; background: var(--accent); color: #0a0a0a; border: none;
+            border-radius: 6px; font-family: 'Geist', sans-serif; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+        }
+        .btn-primary:hover { opacity: 0.85; }
+
+        .loc-desc { font-size: 0.83rem; color: var(--muted); line-height: 1.6; margin-bottom: 1rem; }
+        .coord-box {
+            background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.75rem;
+            font-family: 'Geist Mono', monospace; font-size: 0.8rem; color: var(--muted); margin-bottom: 0.75rem;
+        }
+        .coord-box.active { color: var(--accent); border-color: rgba(74,222,128,0.2); }
+
+        .btn-locate {
+            width: 100%; padding: 0.6rem; background: transparent; border: 1px solid var(--border); color: var(--text);
+            border-radius: 6px; font-family: 'Geist', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.15s;
+        }
+        .btn-locate:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+        .feedback { font-size: 0.78rem; font-family: 'Geist Mono', monospace; margin-top: 0.5rem; min-height: 1.1em; color: var(--muted); }
+
+        /* Map */
+        .map-card { padding: 0; overflow: hidden; }
+        .map-topbar { display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border); }
+        .map-topbar-title { font-size: 0.85rem; font-weight: 500; }
+        .live-badge { display: flex; align-items: center; gap: 0.4rem; font-family: 'Geist Mono', monospace; font-size: 0.72rem; color: var(--accent); }
+        .live-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: blink 2s ease-in-out infinite; }
+        #map { height: 400px; width: 100%; }
+
+        /* Chat Layout */
+        .chat-card { padding: 0; display: flex; flex-direction: column; height: 400px; overflow: hidden; }
+        .chat-box { flex: 1; padding: 1.25rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; }
+        .chat-input-area { display: flex; padding: 1rem; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); gap: 0.5rem; }
+        .chat-bubble { padding: 0.6rem 0.85rem; border-radius: 8px; font-size: 0.85rem; max-width: 80%; line-height: 1.4; }
+        .chat-bubble.me { background: var(--accent-dim); border: 1px solid rgba(74,222,128,0.2); align-self: flex-end; color: var(--text); }
+        .chat-bubble.other { background: rgba(255,255,255,0.05); border: 1px solid var(--border); align-self: flex-start; }
+        .chat-user { font-family: 'Geist Mono', monospace; font-size: 0.65rem; color: var(--muted); margin-bottom: 0.2rem; text-transform: uppercase; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+        /* Leaflet overrides */
+        .leaflet-popup-content-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; backdrop-filter: blur(10px); color: var(--text); font-family: 'Geist', sans-serif; font-size: 0.85rem; }
+        .leaflet-popup-tip-container { display: none; }
+        .leaflet-popup-content { margin: 10px 14px; }
+        .leaflet-container { background: transparent; }
+
+        .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 0.75rem 1.1rem; border-radius: 8px; font-size: 0.82rem; z-index: 9999; transform: translateY(60px); opacity: 0; transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1); max-width: 280px; backdrop-filter: blur(10px); box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+        .toast.show { transform: translateY(0); opacity: 1; }
+
+        @media (max-width: 640px) {
+            .top-row { grid-template-columns: 1fr; }
+            .greeting-card { grid-column: span 1; }
+            .mid-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="logo"><div class="logo-dot"></div>solo-travel</div>
+    <div class="nav-right">
+        <span class="username-pill" id="navUsername">@user</span>
+        <button class="btn-ghost" id="logoutBtn">logout</button>
+    </div>
+</nav>
+
+<div class="page">
+    <div class="top-row">
+        <div class="card greeting-card">
+            <div class="section-label">dashboard</div>
+            <div class="greeting-name" id="welcomeMessage">Hey, traveler 👋</div>
+            <div class="greeting-sub" id="serverData">Loading...</div>
+        </div>
+        <div class="card stat-card">
+            <div class="section-label">nearby</div>
+            <div class="stat-value" id="travelerCount">—</div>
+            <div class="stat-label">wanderers online</div>
+        </div>
+    </div>
+
+    <div class="mid-row">
+        <div class="card">
+            <div class="section-label">your status</div>
+            <textarea class="status-input" id="statusInput" placeholder="What are you up to? (e.g. looking for coffee)"></textarea>
+            <div class="feedback" id="statusMessage"></div>
+            <button class="btn-primary" id="statusBtn">Update status</button>
+        </div>
+        <div class="card">
+            <div class="section-label">location</div>
+            <p class="loc-desc">Share your coordinates so nearby travelers can find you on the map.</p>
+            <div class="coord-box" id="coordDisplay">-- awaiting location --</div>
+            <div class="feedback" id="locationMessage"></div>
+            <button class="btn-locate" id="locationBtn">📍 Share my location</button>
+        </div>
+    </div>
+
+    <div class="mid-row">
+        <div class="card map-card">
+            <div class="map-topbar">
+                <span class="map-topbar-title">Traveler Map</span>
+                <div class="live-badge"><div class="live-dot"></div> live</div>
+            </div>
+            <div id="map"></div>
+        </div>
+
+        <div class="card chat-card">
+            <div class="map-topbar">
+                <span class="map-topbar-title">Global Lounge</span>
+            </div>
+            <div id="chatBox" class="chat-box"></div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Say hello..." class="status-input" style="min-height: 42px;">
+                <button id="sendChatBtn" class="btn-primary" style="margin-top: 0; width: 80px;">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script>
+    const token = localStorage.getItem('token');
+    if (!token) window.location.href = 'login.html';
+    const username = localStorage.getItem('username') || 'Traveler';
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    const map = L.map('map', { zoomControl: false }).setView([20, 0], 2);
+    L.control.zoom({ position: 'topright' }).addTo(map);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; CARTO', subdomains: 'abcd'
+    }).addTo(map);
+
+    const makeIcon = (color) => L.divIcon({
+        html: `<div style="width:10px;height:10px;background:${color};border-radius:50%;border:2px solid rgba(26,26,26,0.9);box-shadow:0 0 0 3px ${color}33;"></div>`,
+        iconSize: [10, 10], iconAnchor: [5, 5], popupAnchor: [0, -10], className: ''
+    });
+
+    const fetchProfile = async () => {
+        try {
+            const res = await fetch('http://127.0.0.1:5000/api/user/profile', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) {
+                const data = await res.json();
+                document.getElementById('welcomeMessage').textContent = `Hey, ${data.user.username} 👋`;
+                document.getElementById('navUsername').textContent = `@${data.user.username}`;
+                document.getElementById('serverData').textContent = data.message;
+            } else { localStorage.clear(); window.location.href = 'login.html'; }
+        } catch(e) { console.error(e); }
+    };
+
+    const loadTravelers = async () => {
+        try {
+            const res = await fetch('http://127.0.0.1:5000/api/user/locations/nearby', { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) {
+                const travelers = await res.json();
+                document.getElementById('travelerCount').textContent = travelers.length;
+                travelers.forEach(t => {
+                    L.marker([t.lat, t.lng], { icon: makeIcon('#4ade80') }).addTo(map)
+                        .bindPopup(`<b>${t.username}</b><div style="color:var(--muted);font-size:0.8rem;margin-top:2px;">${t.status || 'Exploring...'}</div>`);
+                });
+            }
+        } catch(e) { console.error(e); }
+    };
+
+    document.getElementById('locationBtn').addEventListener('click', () => {
+        const msg = document.getElementById('locationMessage');
+        msg.textContent = 'getting location...'; msg.style.color = '';
+        navigator.geolocation.getCurrentPosition(async (pos) => {
+            const lat = pos.coords.latitude, lng = pos.coords.longitude;
+            try {
+                const res = await fetch('http://127.0.0.1:5000/api/user/location', {
+                    method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ latitude: lat, longitude: lng })
+                });
+                if (res.ok) {
+                    msg.textContent = '✓ location shared'; msg.style.color = '#4ade80';
+                    document.getElementById('coordDisplay').textContent = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+                    document.getElementById('coordDisplay').classList.add('active');
+                    map.setView([lat, lng], 11);
+                    L.marker([lat, lng], { icon: makeIcon('#facc15') }).addTo(map).bindPopup('<b>You</b>').openPopup();
+                    loadTravelers(); showToast('Location broadcasted');
+                } else {
+                    const d = await res.json(); msg.textContent = `error: ${d.error}`; msg.style.color = '#f87171';
+                }
+            } catch { msg.textContent = 'server unreachable'; msg.style.color = '#f87171'; }
+        }, () => { msg.textContent = 'location access denied'; msg.style.color = '#f87171'; });
+    });
+
+    document.getElementById('statusBtn').addEventListener('click', async () => {
+        const val = document.getElementById('statusInput').value.trim();
+        const msg = document.getElementById('statusMessage');
+        if (!val) { msg.textContent = 'say something first'; return; }
+        try {
+            const res = await fetch('http://127.0.0.1:5000/api/user/status', {
+                method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ status: val })
+            });
+            if (res.ok) {
+                msg.textContent = '✓ saved'; msg.style.color = '#4ade80';
+                setTimeout(() => { msg.textContent = ''; msg.style.color = ''; }, 2500); showToast('Status updated');
+            }
+        } catch { msg.textContent = 'failed to save'; msg.style.color = '#f87171'; }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = 'login.html'; });
+
+    // Chat Implementation
+    try {
+        const socket = io('http://127.0.0.1:5000');
+        const chatBox = document.getElementById('chatBox');
+        const chatInput = document.getElementById('chatInput');
+        const sendChatBtn = document.getElementById('sendChatBtn');
+
+        const appendMessage = (user, msg, isMe) => {
+            const wrap = document.createElement('div');
+            wrap.className = `chat-bubble ${isMe ? 'me' : 'other'}`;
+            wrap.innerHTML = `<div class="chat-user">${user}</div><div>${msg}</div>`;
+            chatBox.appendChild(wrap);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+
+        sendChatBtn.addEventListener('click', () => {
+            const msg = chatInput.value.trim();
+            if (msg) {
+                socket.emit('sendMessage', { user: username, text: msg });
+                chatInput.value = '';
+            }
+        });
+
+        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendChatBtn.click(); });
+        socket.on('receiveMessage', (data) => appendMessage(data.user, data.text, data.user === username));
+    } catch (e) { console.error("Chat engine offline", e); }
+
+    fetchProfile(); loadTravelers();
+</script>
+</body>
+</html>

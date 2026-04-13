@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solo Travel | Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --surface: rgba(26, 26, 26, 0.75);
+            --border: rgba(255, 255, 255, 0.1);
+            --text: #e8e8e8;
+            --muted: #a1a1aa;
+            --accent: #4ade80;
+            --red: #f87171;
+        }
+
+        body {
+            font-family: 'Geist', sans-serif;
+            background: linear-gradient(to bottom, rgba(15, 15, 15, 0.85), rgba(15, 15, 15, 0.95)), url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .auth-card {
+            background: var(--surface);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .logo { font-family: 'Geist Mono', monospace; font-size: 1rem; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 2rem; }
+        .logo-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+
+        h1 { font-size: 1.5rem; font-weight: 600; text-align: center; margin-bottom: 0.5rem; }
+        p.subtitle { color: var(--muted); text-align: center; font-size: 0.85rem; margin-bottom: 2rem; }
+
+        .input-group { margin-bottom: 1.25rem; }
+        .input-group label { display: block; font-family: 'Geist Mono', monospace; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+        .input-group input {
+            width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 6px; padding: 0.85rem;
+            color: var(--text); font-family: 'Geist', sans-serif; font-size: 0.9rem; outline: none; transition: border-color 0.15s;
+        }
+        .input-group input:focus { border-color: #555; }
+
+        .btn-primary {
+            width: 100%; padding: 0.85rem; background: var(--text); color: #0a0a0a; border: none;
+            border-radius: 6px; font-family: 'Geist', sans-serif; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: opacity 0.15s; margin-top: 1rem;
+        }
+        .btn-primary:hover { opacity: 0.85; }
+
+        .feedback { text-align: center; font-family: 'Geist Mono', monospace; font-size: 0.75rem; margin-top: 1rem; min-height: 1.2em; }
+        .footer-text { text-align: center; font-size: 0.85rem; color: var(--muted); margin-top: 2rem; border-top: 1px solid var(--border); padding-top: 1.5rem; }
+        .footer-text a { color: var(--text); text-decoration: none; font-weight: 500; transition: color 0.15s; }
+        .footer-text a:hover { color: var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="auth-card">
+        <div class="logo"><div class="logo-dot"></div>Trapanion</div>
+        <h1>Welcome Back</h1>
+        <p class="subtitle">Access your dashboard.</p>
+
+        <form id="loginForm">
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" id="email" required>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn-primary">Log In</button>
+        </form>
+
+        <div id="message" class="feedback"></div>
+
+        <div class="footer-text">
+            Don't have an account? <a href="index.html">Sign up here</a>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('loginForm');
+        const msgDiv = document.getElementById('message');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            msgDiv.textContent = 'authenticating...'; msgDiv.style.color = 'var(--muted)';
+            
+            try {
+                const response = await fetch('http://127.0.0.1:5000/api/auth/login', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: document.getElementById('email').value,
+                        password: document.getElementById('password').value
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    msgDiv.textContent = '✓ authenticated'; msgDiv.style.color = 'var(--accent)';
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.user.username);
+                    setTimeout(() => window.location.href = 'dashboard.html', 500);
+                } else { msgDiv.textContent = `error: ${data.error}`; msgDiv.style.color = 'var(--red)'; }
+            } catch { msgDiv.textContent = 'server unreachable'; msgDiv.style.color = 'var(--red)'; }
+        });
+    </script>
+</body>
+</html>
