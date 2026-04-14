@@ -24,14 +24,12 @@
 
         body {
             font-family: 'Geist', sans-serif;
-            /* Added Atmospheric Background Image with Dark Overlay */
             background: linear-gradient(to bottom, rgba(15, 15, 15, 0.85), rgba(15, 15, 15, 0.95)), url('https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?q=80&w=2021&auto=format&fit=crop') no-repeat center center fixed;
             background-size: cover;
             color: var(--text);
             min-height: 100vh;
         }
 
-        /* Nav */
         nav {
             display: flex;
             justify-content: space-between;
@@ -60,7 +58,6 @@
         }
         .btn-ghost:hover { border-color: var(--red); color: var(--red); background: var(--red-dim); }
 
-        /* Main */
         .page { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
         .section-label { font-family: 'Geist Mono', monospace; font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.75rem; }
 
@@ -73,7 +70,6 @@
         }
         .card:hover { border-color: var(--border-hover); }
 
-        /* Top row */
         .top-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
         .greeting-card { grid-column: span 2; }
         .greeting-name { font-size: 1.4rem; font-weight: 600; margin-bottom: 0.25rem; }
@@ -82,7 +78,6 @@
         .stat-value { font-family: 'Geist Mono', monospace; font-size: 1.8rem; font-weight: 500; line-height: 1; }
         .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.5rem; }
 
-        /* Mid row */
         .mid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
         .status-input {
             width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 6px; padding: 0.75rem;
@@ -112,7 +107,6 @@
 
         .feedback { font-size: 0.78rem; font-family: 'Geist Mono', monospace; margin-top: 0.5rem; min-height: 1.1em; color: var(--muted); }
 
-        /* Map */
         .map-card { padding: 0; overflow: hidden; }
         .map-topbar { display: flex; justify-content: space-between; align-items: center; padding: 0.85rem 1.25rem; border-bottom: 1px solid var(--border); }
         .map-topbar-title { font-size: 0.85rem; font-weight: 500; }
@@ -120,7 +114,6 @@
         .live-dot { width: 6px; height: 6px; background: var(--accent); border-radius: 50%; animation: blink 2s ease-in-out infinite; }
         #map { height: 400px; width: 100%; }
 
-        /* Chat Layout */
         .chat-card { padding: 0; display: flex; flex-direction: column; height: 400px; overflow: hidden; }
         .chat-box { flex: 1; padding: 1.25rem; overflow-y: auto; display: flex; flex-direction: column; gap: 0.75rem; }
         .chat-input-area { display: flex; padding: 1rem; border-top: 1px solid var(--border); background: rgba(0,0,0,0.2); gap: 0.5rem; }
@@ -129,13 +122,11 @@
         .chat-bubble.other { background: rgba(255,255,255,0.05); border: 1px solid var(--border); align-self: flex-start; }
         .chat-user { font-family: 'Geist Mono', monospace; font-size: 0.65rem; color: var(--muted); margin-bottom: 0.2rem; text-transform: uppercase; }
 
-        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 
-        /* Leaflet overrides */
         .leaflet-popup-content-wrapper { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; backdrop-filter: blur(10px); color: var(--text); font-family: 'Geist', sans-serif; font-size: 0.85rem; }
         .leaflet-popup-tip-container { display: none; }
         .leaflet-popup-content { margin: 10px 14px; }
@@ -165,7 +156,7 @@
     <div class="top-row">
         <div class="card greeting-card">
             <div class="section-label">dashboard</div>
-            <div class="greeting-name" id="welcomeMessage">Hey, traveler 👋</div>
+            <div class="greeting-name" id="welcomeMessage">Hey, traveler </div>
             <div class="greeting-sub" id="serverData">Loading...</div>
         </div>
         <div class="card stat-card">
@@ -187,7 +178,7 @@
             <p class="loc-desc">Share your coordinates so nearby travelers can find you on the map.</p>
             <div class="coord-box" id="coordDisplay">-- awaiting location --</div>
             <div class="feedback" id="locationMessage"></div>
-            <button class="btn-locate" id="locationBtn">📍 Share my location</button>
+            <button class="btn-locate" id="locationBtn">Share my location</button>
         </div>
     </div>
 
@@ -308,7 +299,6 @@
 
     document.getElementById('logoutBtn').addEventListener('click', () => { localStorage.clear(); window.location.href = 'login.html'; });
 
-    // Chat Implementation
     try {
         const socket = io('http://127.0.0.1:5000');
         const chatBox = document.getElementById('chatBox');
